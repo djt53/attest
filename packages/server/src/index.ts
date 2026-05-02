@@ -14,6 +14,8 @@ import { stripeCustomersRoute } from "./routes/stripe-customers.js";
 import { detectRoute } from "./routes/detect.js";
 import { discoveryRoute } from "./routes/discovery.js";
 import { authzCheckRoute } from "./routes/authz-check.js";
+import { billingRoute } from "./routes/billing.js";
+import { merchantRequestsRoute } from "./routes/merchant-requests.js";
 import { apiKeyAuth } from "./middleware/api-key.js";
 import { rateLimit } from "./middleware/rate-limit.js";
 
@@ -59,6 +61,12 @@ app.route("/v0/stripe", stripeCustomersRoute);
 
 // Authorization check (continuous validation)
 app.route("/v0/authz", authzCheckRoute);
+
+// Billing (plans, checkout, portal, usage, webhooks)
+app.route("/v0/billing", billingRoute);
+
+// Agent-driven merchant recruitment
+app.route("/v0/merchant-requests", merchantRequestsRoute);
 
 // Consent routes (consumer-facing)
 app.route("/v0/consent", consentRoute);

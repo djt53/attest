@@ -218,6 +218,143 @@ server.tool(
   }
 );
 
+// Tool: check_merchant — check if a merchant supports Attest
+server.tool(
+  "check_merchant_attest",
+  "Check whether a merchant website supports Attest agent verification. Returns the merchant's attestation support status, available benefits for verified agents, and installation instructions if not supported.",
+  {
+    domain: z
+      .string()
+      .describe("The merchant's domain (e.g., 'cool-store.com')"),
+  },
+  async ({ domain }) => {
+    // Check for .well-known/attest.json
+    let discoveryResult: any = null;
+    try {
+      const res = await fetch(
+        `https://${domain}/.well-known/attest.json`,
+        { signal: AbortSignal.timeout(5000) }
+      );
+      if (res.ok) {
+        discoveryResult = await res.json();
+      }
+    } catch {}
+
+    // Check for WWW-Attest header by making a request
+    let challengeHeader: string | null = null;
+    try {
+      const res = await fetch(`https://${domain}`, {
+        signal: AbortSignal.timeout(5000),
+        headers: { "User-Agent": `Attest-Check/1.0 (${issuer})` },
+      });
+      challengeHeader = res.headers.get("WWW-Attest");
+    } catch {}
+
+    const supported = !!(discoveryResult || challengeHeader);
+
+    const result: any = {
+      domain,
+      attest_supported: supported,
+    };
+
+    if (supported) {
+      result.discovery = discoveryResult;
+      result.challenge = challengeHeader;
+      result.message = `${domain} supports Attest! You can attest your identity to get benefits like ${
+        discoveryResult?.benefits
+          ? Object.keys(discoveryResult.benefits).join(", ")
+          : "loyalty pricing, real-time inventory"
+      }.`;
+    } else {
+      result.message = `${domain} does not yet support Attest agent verification. You'll be treated as an unidentified agent — you may encounter CAPTCHAs, rate limits, and won't get loyalty pricing.`;
+      result.suggestion =
+        "You can let the user know that this merchant doesn't support agent verification. If the user is a regular customer there, they might want to suggest the merchant install Attest.";
+      result.merchant_install_url = `https://dashboard.attest.dev/login`;
+      result.shopify_app_url = "https://apps.shopify.com/attest";
+    }
+
+    return {
+      content: [
+        {
+          type: "text" as const,
+          text: JSON.stringify(result, null, 2),
+        },
+      ],
+    };
+  }
+);
+
+// Tool: request_attest — send an agent-driven request for a merchant to install Attest
+server.tool(
+  "request_merchant_attest",
+  "Send a request to a merchant to install Attest, so your agent can get verified access (loyalty pricing, no CAPTCHAs, etc). This notifies the Attest team to reach out to the merchant. Use this when a merchant doesn't support Attest and your user would benefit from verified agent access there.",
+  {
+    merchant_domain: z.string().describe("The merchant's domain"),
+    user_email: z
+      .string()
+      .email()
+      .optional()
+      .describe("The user's email (for the merchant to see demand)"),
+    reason: z
+      .string()
+      .optional()
+      .describe("Why the user wants this merchant to support Attest"),
+  },
+  async ({ merchant_domain, user_email, reason }) => {
+    const apiUrl = process.env.ATTEST_API_URL || "https://api.attest.dev";
+
+    try {
+      const response = await fetch(`${apiUrl}/v0/merchant-requests`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          merchant_domain,
+          requested_by: user_email || "anonymous",
+          reason: reason || "Agent user wants verified access",
+          source: `mcp:${issuer}`,
+        }),
+      });
+
+      if (response.ok) {
+        return {
+          content: [
+            {
+              type: "text" as const,
+              text: JSON.stringify(
+                {
+                  submitted: true,
+                  merchant_domain,
+                  message: `Request submitted! The Attest team will reach out to ${merchant_domain} about enabling agent verification. In the meantime, you can still shop there — you'll just get the unverified experience.`,
+                },
+                null,
+                2
+              ),
+            },
+          ],
+        };
+      }
+    } catch {}
+
+    return {
+      content: [
+        {
+          type: "text" as const,
+          text: JSON.stringify(
+            {
+              submitted: false,
+              merchant_domain,
+              message: `Couldn't submit the request right now. The merchant can install Attest directly at dashboard.attest.dev or from the Shopify App Store.`,
+              install_url: "https://dashboard.attest.dev/login",
+            },
+            null,
+            2
+          ),
+        },
+      ],
+    };
+  }
+);
+
 // Start server
 const transport = new StdioServerTransport();
 server.connect(transport).catch(console.error);

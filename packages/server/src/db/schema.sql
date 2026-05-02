@@ -131,3 +131,19 @@ CREATE TABLE api_keys (
 
 CREATE INDEX idx_api_keys_merchant ON api_keys(merchant_id);
 CREATE INDEX idx_api_keys_prefix ON api_keys(key_prefix);
+
+-- Agent-driven merchant recruitment requests
+CREATE TABLE merchant_requests (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  merchant_domain TEXT NOT NULL,
+  requested_by TEXT NOT NULL,           -- email or "anonymous"
+  reason TEXT NOT NULL DEFAULT '',
+  source TEXT NOT NULL DEFAULT '',       -- e.g., "mcp:anthropic"
+  request_count INT NOT NULL DEFAULT 1,
+  last_requested_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+  UNIQUE(merchant_domain, requested_by)
+);
+
+CREATE INDEX idx_merchant_requests_domain ON merchant_requests(merchant_domain);
+CREATE INDEX idx_merchant_requests_count ON merchant_requests(request_count DESC);
