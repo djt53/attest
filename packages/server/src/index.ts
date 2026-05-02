@@ -7,6 +7,8 @@ import { merchantsRoute } from "./routes/merchants.js";
 import { consentRoute } from "./routes/consent.js";
 import { healthRoute } from "./routes/health.js";
 import { onboardRoute } from "./routes/onboard.js";
+import { authRoute } from "./routes/auth.js";
+import { analyticsRoute } from "./routes/analytics.js";
 import { apiKeyAuth } from "./middleware/api-key.js";
 import { rateLimit } from "./middleware/rate-limit.js";
 
@@ -31,13 +33,20 @@ app.route("/v0/verify", verifyRoute);
 app.use("/v0/merchants/*", apiKeyAuth);
 app.route("/v0/merchants", merchantsRoute);
 
+// Analytics (merchant-authenticated)
+app.use("/v0/merchants/*/analytics*", apiKeyAuth);
+app.route("/v0/merchants", analyticsRoute);
+
 // Public self-serve onboarding
 app.route("/v0/onboard", onboardRoute);
 
 // Runtime registration (separate auth — TODO: admin key)
 app.route("/v0/runtimes", runtimesRoute);
 
-// Consent routes (consumer-facing, authenticated via magic link — TODO)
+// Auth (magic link for consent portal)
+app.route("/v0/auth", authRoute);
+
+// Consent routes (consumer-facing)
 app.route("/v0/consent", consentRoute);
 
 const port = parseInt(process.env.PORT || "3000");
