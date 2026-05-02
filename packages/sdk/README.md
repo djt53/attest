@@ -90,6 +90,41 @@ if (!validation.valid) {
 }
 ```
 
+### Stripe Checkout
+
+```typescript
+import { createStripeCheckoutParams } from "@anthropic-attest/sdk/adapters/stripe";
+
+// When creating a Stripe Checkout Session with an agent attestation
+const params = createStripeCheckoutParams({
+  token: attestationToken,
+  merchantId: "my-store.com",
+});
+
+const session = await stripe.checkout.sessions.create({
+  ...params,
+  line_items: [...],
+  mode: "payment",
+  success_url: "...",
+});
+```
+
+Or use the Express middleware:
+
+```typescript
+import { stripeAttestMiddleware } from "@anthropic-attest/sdk/adapters/stripe";
+
+app.post("/create-checkout-session",
+  stripeAttestMiddleware({ merchantId: "my-store.com" }),
+  async (req, res) => {
+    const session = await stripe.checkout.sessions.create({
+      ...req.attestStripeParams,
+      line_items: [...],
+    });
+  }
+);
+```
+
 ## Browser detection
 
 ```html

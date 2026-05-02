@@ -24,10 +24,13 @@ Agent Runtime ──attestation header──▶ Merchant (Shopify app / SDK)
 | Package | Description |
 |---------|-------------|
 | `@attest/server` | Hono-based verification API |
-| `@attest/sdk` | Agent-side SDK for creating attestation tokens |
+| `@attest/sdk` | Agent-side SDK, merchant middleware, adapters |
+| `@attest/mcp-adapter` | Claude MCP server for attestation |
 | `@attest/shopify-app` | Shopify embedded admin app |
+| `@attest/stripe-app` | Stripe Apps dashboard integration |
 | `@attest/consent-portal` | Consumer permission management UI |
 | `spec/` | Attestation specification v0 |
+| `docs/` | OpenAPI spec |
 
 ## Quick Start
 
@@ -101,6 +104,32 @@ Response:
 }
 ```
 
+## Stripe Integration
+
+Pass attestation tokens through Stripe Checkout:
+
+```typescript
+import Stripe from "stripe";
+import { createStripeCheckoutParams } from "@attest/sdk/adapters/stripe";
+
+const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
+const attestationToken = req.headers["agent-attestation"];
+
+const session = await stripe.checkout.sessions.create({
+  ...createStripeCheckoutParams({
+    token: attestationToken,
+    merchantId: "my-store.com",
+  }),
+  line_items: [{ price: "price_xxx", quantity: 1 }],
+  mode: "payment",
+  success_url: "https://my-store.com/success",
+});
+```
+
+The Attest webhook handler verifies the token and decorates the Stripe
+PaymentIntent with `attest_*` metadata keys, visible in the Stripe Dashboard
+via the Attest Stripe App.
+
 ## Development
 
 ```bash
@@ -109,11 +138,15 @@ npm test
 
 # Server only
 npm run dev --workspace=packages/server
+
+# End-to-end demo (no DB needed)
+npx tsx packages/server/src/demo.ts
 ```
 
 ## Stack
 
 - **Server:** TypeScript, Hono, Postgres, jose (JWT)
 - **Shopify app:** Remix, Polaris
+- **Stripe app:** Stripe UI Extension SDK, React
 - **Consent portal:** Remix, Tailwind
 - **Deployment:** Render
