@@ -7,7 +7,9 @@
     "dev": "tsx watch src/index.ts",
     "build": "tsc",
     "test": "vitest run",
-    "test:watch": "vitest"
+    "test:watch": "vitest",
+    "db:migrate": "tsx src/db/migrate.ts",
+    "demo": "tsx src/demo.ts"
   },
   "dependencies": {
     "hono": "^4.7.0",
