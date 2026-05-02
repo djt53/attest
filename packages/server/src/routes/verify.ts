@@ -1,6 +1,6 @@
 import { Hono } from "hono";
 import { z } from "zod";
-import { verifyAttestation } from "../services/verification.js";
+import { verifyAndResolve } from "../services/pipeline.js";
 
 export const verifyRoute = new Hono();
 
@@ -9,7 +9,7 @@ const VerifyRequest = z.object({
   merchant_id: z.string().min(1),
 });
 
-// POST /v0/verify — verify an agent attestation token
+// POST /v0/verify — full verification pipeline (JWT + resolution + policy + consent)
 verifyRoute.post("/", async (c) => {
   const body = await c.req.json().catch(() => null);
   if (!body) {
@@ -24,8 +24,7 @@ verifyRoute.post("/", async (c) => {
     );
   }
 
-  const result = await verifyAttestation(parsed.data.token, parsed.data.merchant_id);
-
+  const result = await verifyAndResolve(parsed.data.token, parsed.data.merchant_id);
   return c.json(result, result.valid ? 200 : 401);
 });
 
@@ -41,6 +40,6 @@ verifyRoute.get("/", async (c) => {
     return c.json({ valid: false, error: "missing_merchant_id" }, 400);
   }
 
-  const result = await verifyAttestation(attestationHeader, merchantId);
+  const result = await verifyAndResolve(attestationHeader, merchantId);
   return c.json(result, result.valid ? 200 : 401);
 });
