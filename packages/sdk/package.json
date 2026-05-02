@@ -33,6 +33,10 @@
     "./adapters/generic-jwt": {
       "import": "./dist/adapters/generic-jwt.js",
       "types": "./dist/adapters/generic-jwt.d.ts"
+    },
+    "./adapters/stripe": {
+      "import": "./dist/adapters/stripe.js",
+      "types": "./dist/adapters/stripe.d.ts"
     }
   },
   "scripts": {
