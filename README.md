@@ -21,39 +21,46 @@ Auth providers (Clerk, Auth0, WorkOS) are adding agent authentication — but th
 
 **Attest is the neutral resolution layer that sits between agent runtimes and merchants.** Open spec on the agent side so any runtime can participate. Paid product on the merchant side that turns anonymous agent traffic into recognized customer interactions.
 
-## How it works
+## How it works — challenge and response
+
+Attest uses a **merchant-driven challenge model**. The merchant creates the incentive for agents to identify themselves. No upfront coordination with agent runtimes required.
 
 ```
-Agent Runtime                          Merchant (Shopify / Stripe / Custom)
-┌─────────────────┐                    ┌──────────────────────────────────┐
-│ "I am agent X,  │  Agent-Attestation │                                  │
-│  acting for     │ ──── header ─────▶ │  Attest SDK / Webhook            │
-│  human Y,       │                    │         │                        │
-│  scope: Z"      │                    │         ▼                        │
-│                 │                    │  ┌─────────────────────────┐     │
-│ Signed JWT      │                    │  │ Attest Verification API │     │
-│ (ES256)         │                    │  │                         │     │
-└─────────────────┘                    │  │ 1. Verify JWT signature │     │
-                                       │  │ 2. Resolve to customer  │     │
-                                       │  │ 3. Evaluate policy      │     │
-                                       │  │ 4. Log consent          │     │
-                                       │  └─────────────────────────┘     │
-                                       │         │                        │
-                                       │         ▼                        │
-                                       │  "This is Alice (VIP tier),      │
-                                       │   via Claude shopping agent,     │
-                                       │   authorized for purchases       │
-                                       │   up to $500. Allow."            │
-                                       └──────────────────────────────────┘
+Agent                                     Merchant
+  │                                          │
+  │──── GET /products ──────────────────────▶│
+  │                                          │ (detects agent via user-agent,
+  │                                          │  behavioral signals)
+  │◀─── 200 OK ─────────────────────────────│
+  │     WWW-Attest: realm="cool-store.com",  │
+  │       benefits="loyalty_pricing          │
+  │                 real_time_inventory       │
+  │                 skip_captcha"             │
+  │                                          │
+  │ (agent sees the challenge —              │
+  │  "I get loyalty pricing if I attest")    │
+  │                                          │
+  │──── GET /products ──────────────────────▶│
+  │     Agent-Attestation: eyJhbGci...       │
+  │                                          │ (verifies JWT, resolves to
+  │                                          │  customer Alice, VIP tier)
+  │◀─── 200 OK ─────────────────────────────│
+  │     X-Attest-Tier: verified              │
+  │     (VIP pricing, real-time inventory,   │
+  │      personalized results)               │
 ```
 
-1. **Agent creates an attestation** — a signed JWT asserting "I am agent X, acting for human Y, with scope Z, at merchant W." The runtime signs it with its private key.
+**Three layers, each valuable on its own:**
 
-2. **Merchant verifies** — via the Attest API, Shopify app, or Stripe webhook. Attest validates the signature against the runtime's published JWKS, checks expiry and replay, then resolves the human principal against the merchant's customer database.
+| Layer | Requires agent cooperation | What the merchant learns |
+|-------|---------------------------|-------------------------|
+| **Detect** | No | "34% of your traffic is agents — here's the breakdown by runtime" |
+| **Challenge** | No (merchant sends, agent can ignore) | "We're offering loyalty pricing to agents that identify themselves" |
+| **Verify** | Yes (agent responds with signed JWT) | "This is Alice's Claude agent, she's your VIP customer, authorized for purchases up to $500" |
 
-3. **Merchant gets a clear answer** — verified agent identity, matched customer record, loyalty tier, and a policy decision (allow/deny/step-up). The consent event is logged for audit.
+The merchant installs Attest and gets value immediately from detection and analytics. Challenges start flowing to agents. Agent runtimes adopt the response protocol when their agents encounter challenges at enough merchants and miss out on better pricing, real-time inventory, and streamlined checkout.
 
-4. **Consumer stays in control** — a consent portal lets the human review which agents have acted on their behalf, at which merchants, and revoke permissions.
+**Session stitching across visits:** Attestation tokens contain stable identifiers (`act.sub` for the human, `sub` for the agent). The merchant recognizes the same customer across visits, across agents, and across sessions — linking Monday's browsing to Friday's purchase, even if a different agent was used each time.
 
 ## What merchants get
 
@@ -104,6 +111,23 @@ const { token } = await client.attest({
 fetch(merchantUrl, {
   headers: { "Agent-Attestation": token },
 });
+```
+
+Or use the challenge handler for automatic response to merchant challenges:
+
+```typescript
+import { AttestClient, ChallengeHandler } from "@attest/sdk";
+
+const handler = new ChallengeHandler({
+  client,
+  agentId: "shopping-agent",
+  humanPrincipal: { id: "user_123", email: "alice@example.com" },
+  defaultScope: ["browse", "purchase<=500"],
+});
+
+// Automatically handles WWW-Attest challenges — retries with attestation
+const response = await handler.fetch("https://cool-store.com/products");
+// Response includes VIP pricing, real-time inventory, etc.
 ```
 
 Adapters available for Claude (MCP server), OpenAI (function calling), and generic JWT (BYO signing).
