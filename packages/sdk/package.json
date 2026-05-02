@@ -1,9 +1,18 @@
 {
-  "name": "@attest/sdk",
+  "name": "@anthropic-attest/sdk",
   "version": "0.1.0",
+  "description": "Agent attestation SDK — create and verify identity tokens for agent-to-merchant commerce",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/djt53/attest",
+    "directory": "packages/sdk"
+  },
+  "keywords": ["agent", "attestation", "identity", "commerce", "jwt", "verification"],
   "type": "module",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
+  "files": ["dist", "README.md", "LICENSE"],
   "exports": {
     ".": {
       "import": "./dist/index.js",
@@ -16,6 +25,14 @@
     "./browser": {
       "import": "./dist/browser.js",
       "types": "./dist/browser.d.ts"
+    },
+    "./adapters/openai": {
+      "import": "./dist/adapters/openai.js",
+      "types": "./dist/adapters/openai.d.ts"
+    },
+    "./adapters/generic-jwt": {
+      "import": "./dist/adapters/generic-jwt.js",
+      "types": "./dist/adapters/generic-jwt.d.ts"
     }
   },
   "scripts": {
