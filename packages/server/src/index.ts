@@ -9,6 +9,7 @@ import { healthRoute } from "./routes/health.js";
 import { onboardRoute } from "./routes/onboard.js";
 import { authRoute } from "./routes/auth.js";
 import { analyticsRoute } from "./routes/analytics.js";
+import { stripeRoute } from "./routes/stripe.js";
 import { apiKeyAuth } from "./middleware/api-key.js";
 import { rateLimit } from "./middleware/rate-limit.js";
 
@@ -45,6 +46,9 @@ app.route("/v0/runtimes", runtimesRoute);
 
 // Auth (magic link for consent portal)
 app.route("/v0/auth", authRoute);
+
+// Stripe integration (webhooks are public, verify/connect use API key)
+app.route("/v0/stripe", stripeRoute);
 
 // Consent routes (consumer-facing)
 app.route("/v0/consent", consentRoute);
