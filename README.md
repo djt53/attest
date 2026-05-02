@@ -17,9 +17,9 @@ The payments layer is being solved. Stripe's [Agentic Commerce Protocol](https:/
 - What is this agent authorized to do, and who authorized it?
 - Should I apply their loyalty discount, or treat this as a guest checkout?
 
-Auth providers (Clerk, Auth0, WorkOS) are adding agent authentication — but they work within their own platform boundary. A Clerk-powered app knows its own users. It can't resolve an inbound agent from a different platform to a customer record in Shopify.
+Auth providers (Clerk, Auth0, WorkOS) are adding agent authentication — but they work within their own platform boundary. A Clerk-powered app knows its own users. It can't resolve an inbound agent from a different platform to a customer record in Shopify. Clerk's [AgentPass](https://github.com/clerk/agentpass) protocol handles delegation ("can this agent act for this user?") but not merchant-side resolution ("is this a returning customer?").
 
-**Attest is the neutral resolution layer that sits between agent runtimes and merchants.** Open spec on the agent side so any runtime can participate. Paid product on the merchant side that turns anonymous agent traffic into recognized customer interactions.
+**Attest is the neutral resolution layer that sits between agent runtimes and merchants.** Open spec on the agent side so any runtime can participate. Compatible with AgentPass credentials for agents that use them. Paid product on the merchant side that turns anonymous agent traffic into recognized customer interactions.
 
 ## How it works — challenge and response
 
@@ -79,6 +79,7 @@ The merchant installs Attest and gets value immediately from detection and analy
 | **Payment credentials** | Visa TAP, Mastercard Agent Pay | Agents authenticate to payment networks |
 | **Payment processing** | Stripe ACP, Link Agent Wallet | Agents complete purchases |
 | **Agent auth (within platform)** | Clerk, Auth0, WorkOS, Stytch | Agents authenticated within one app's boundary |
+| **Agent delegation** | Clerk AgentPass | Agent authorized to act for a user at a service |
 | **Enterprise agent governance** | Google Agent Identity, Microsoft Entra Agent ID, Okta | Agents managed within one enterprise |
 | **Merchant identity resolution** | **Attest** | **Merchant answers: who is this agent, who do they represent, are they a returning customer?** |
 
@@ -130,7 +131,7 @@ const response = await handler.fetch("https://cool-store.com/products");
 // Response includes VIP pricing, real-time inventory, etc.
 ```
 
-Adapters available for Claude (MCP server), OpenAI (function calling), and generic JWT (BYO signing).
+Adapters available for Claude (MCP server), OpenAI (function calling), Stripe Checkout, and generic JWT (BYO signing). Also accepts [AgentPass](https://github.com/clerk/agentpass) credentials.
 
 ### For Shopify merchants
 
@@ -156,21 +157,29 @@ const session = await stripe.checkout.sessions.create({
 
 The Attest webhook verifies the token and decorates the PaymentIntent with `attest_*` metadata, visible in the Stripe Dashboard via the Attest Stripe App.
 
-### For any merchant (API / middleware)
+### For any merchant (3 lines)
 
 ```typescript
-import { createAttestMiddleware } from "@attest/sdk/middleware";
+import { attest } from "@attest/sdk/express";
 
-app.post("/checkout", createAttestMiddleware({
+app.use(attest({
   apiKey: "att_live_...",
   merchantId: "my-store.com",
-}), (req, res) => {
-  if (req.attestation?.valid) {
-    console.log("Agent:", req.attestation.agent);
-    console.log("Customer:", req.attestation.resolution);
+}));
+
+// Every route now has req.attest with full context
+app.get("/products", (req, res) => {
+  if (req.attest.isAgent) {
+    console.log("Agent:", req.attest.runtime, "Tier:", req.attest.tier);
+  }
+  if (req.attest.verified) {
+    console.log("Customer:", req.attest.customer);
+    // req.attest.benefits.loyaltyPricing, .realTimeInventory, etc.
   }
 });
 ```
+
+Full [integration guide](packages/dashboard/app/routes/integrate.tsx) available in the merchant dashboard.
 
 ## Verification API
 
@@ -205,21 +214,23 @@ curl -X POST https://api.attest.dev/v0/verify \
 
 | Package | Description |
 |---------|-------------|
-| `@attest/server` | Verification API — JWT verify, identity resolution, policy engine, consent ledger, analytics |
-| `@attest/sdk` | Agent SDK, merchant middleware (Express/Hono), browser detection, Stripe/OpenAI/JWT adapters |
+| `@attest/server` | Verification API — JWT verify, identity resolution, policy engine, consent ledger, analytics, AgentPass compat, holder-binding, trust tiers |
+| `@attest/sdk` | Agent SDK, unified Express middleware, challenge handler, browser detection, Stripe/OpenAI/JWT/AgentPass adapters |
 | `@attest/mcp-adapter` | Claude MCP server for attestation |
+| `@attest/dashboard` | Standalone merchant dashboard — traffic, policies, customers, integration guide |
 | `@attest/shopify-app` | Shopify embedded admin — agent dashboard, policies, settings, checkout extension |
 | `@attest/stripe-app` | Stripe Apps — agent details on payments, traffic overview dashboard |
 | `@attest/consent-portal` | Consumer permission management — magic-link auth, review, revoke |
-| `spec/` | [Attestation specification v0](packages/spec/attestation-v0.md) |
+| `spec/` | [Attestation spec v0](packages/spec/attestation-v0.md), [Challenge spec v0](packages/spec/challenge-v0.md) |
 | `docs/` | [OpenAPI 3.1 spec](docs/openapi.yaml) |
+| `decks/` | [Merchant sales deck](decks/merchant-deck.html), [VC pitch deck](decks/vc-deck.html) |
 
 ## Development
 
 ```bash
 npm install                              # install all workspace deps
 npm run dev                              # start server (port 3000)
-npm test                                 # run all tests (51 tests)
+npm test                                 # run all tests (88 tests)
 npx tsx packages/server/src/demo.ts      # end-to-end demo (no DB needed)
 npx tsx packages/server/src/db/migrate.ts # run DB migrations
 ```
@@ -231,8 +242,18 @@ Server runs without `DATABASE_URL` in JWT-only mode (in-memory stores). Set `DAT
 - **Server:** TypeScript, Hono, Postgres, jose (JWT), Zod
 - **Shopify app:** Remix, Polaris
 - **Stripe app:** Stripe UI Extension SDK, React
+- **Dashboard:** Remix, Tailwind
 - **Consent portal:** Remix, Tailwind
 - **Deployment:** Render
+
+## Security
+
+- **ES256 (ECDSA P-256)** signed attestation JWTs with JWKS-based key discovery
+- **Holder-binding** (DPoP-style) — ephemeral key pairs prevent token theft
+- **Runtime trust tiers** — vendor-attested (Anthropic, OpenAI, Google), registered, self-signed
+- **Continuous authorization** — `POST /v0/authz/check` for mid-session revalidation with consent revocation checking
+- **Replay prevention** — unique `jti` per token, 1-hour window
+- **AgentPass compatibility** — accepts Clerk AgentPass credentials alongside native attestations
 
 ## License
 
