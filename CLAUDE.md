@@ -10,6 +10,7 @@ Monorepo with npm workspaces:
 - `packages/sdk` — Agent-side SDK + merchant middleware
 - `packages/mcp-adapter` — Claude MCP server for attestation
 - `packages/shopify-app` — Shopify embedded admin (Remix + Polaris)
+- `packages/stripe-app` — Stripe Apps dashboard (UI Extension SDK)
 - `packages/consent-portal` — Consumer permissions UI (Remix + Tailwind)
 - `packages/spec` — Attestation specification v0
 - `docs/` — OpenAPI spec
@@ -33,6 +34,8 @@ Set DATABASE_URL to a Postgres instance for full features.
 - Hono over Express — lighter, faster, Bun/Deno/CF Workers compatible
 - `postgres` (porsager) over pg/knex — simpler, tagged template queries
 - Spec v0 uses `act` claim (RFC 7519) for human principal delegation
+- Stripe integration decorates PaymentIntents/CheckoutSessions with `attest_*` metadata
+- Two distribution channels: Shopify App Store + Stripe Apps marketplace
 
 ## Testing
 
