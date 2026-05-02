@@ -53,12 +53,10 @@ export async function verifyAttestation(
   token: string,
   expectedAudience: string
 ): Promise<VerificationResult> {
-  // Decode header to get issuer for JWKS lookup
-  const header = jose.decodeProtectedHeader(token);
+  // Decode header and claims
   let claims: jose.JWTPayload;
-
   try {
-    // Peek at claims to get issuer
+    jose.decodeProtectedHeader(token);
     claims = jose.decodeJwt(token);
   } catch {
     return { valid: false, error: "malformed_jwt" };

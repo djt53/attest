@@ -64,6 +64,42 @@ merchantsRoute.post("/:externalId/customers", async (c) => {
   return c.json(customer, 201);
 });
 
+// Bulk customer import
+const BulkCustomerRequest = z.object({
+  customers: z.array(
+    z.object({
+      email: z.string().email(),
+      external_customer_id: z.string().optional(),
+      name: z.string().optional(),
+      tier: z.string().optional(),
+    })
+  ).min(1).max(1000),
+});
+
+merchantsRoute.post("/:externalId/customers/import", async (c) => {
+  const merchant = await findMerchantByExternalId(c.req.param("externalId"));
+  if (!merchant) return c.json({ error: "merchant_not_found" }, 404);
+
+  const body = await c.req.json().catch(() => null);
+  if (!body) return c.json({ error: "invalid_request_body" }, 400);
+
+  const parsed = BulkCustomerRequest.safeParse(body);
+  if (!parsed.success) {
+    return c.json({ error: parsed.error.issues[0]?.message }, 400);
+  }
+
+  const results = await Promise.allSettled(
+    parsed.data.customers.map((customer) =>
+      upsertCustomer({ merchant_id: merchant.id, ...customer })
+    )
+  );
+
+  const imported = results.filter((r) => r.status === "fulfilled").length;
+  const failed = results.filter((r) => r.status === "rejected").length;
+
+  return c.json({ imported, failed, total: parsed.data.customers.length }, 201);
+});
+
 // Policy management
 const CreatePolicyRequest = z.object({
   runtime_issuer: z.string().optional(),
