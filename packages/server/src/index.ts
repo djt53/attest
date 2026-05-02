@@ -6,16 +6,38 @@ import { runtimesRoute } from "./routes/runtimes.js";
 import { merchantsRoute } from "./routes/merchants.js";
 import { consentRoute } from "./routes/consent.js";
 import { healthRoute } from "./routes/health.js";
+import { onboardRoute } from "./routes/onboard.js";
+import { apiKeyAuth } from "./middleware/api-key.js";
+import { rateLimit } from "./middleware/rate-limit.js";
 
 const app = new Hono();
 
 app.use("*", logger());
 app.use("*", cors());
 
+// Public routes
 app.route("/health", healthRoute);
+
+// Rate-limited verification endpoint
+const verifyLimiter = rateLimit({
+  max: 1000,
+  windowMs: 60_000, // 1000 req/min per merchant
+});
+
+app.use("/v0/verify/*", apiKeyAuth, verifyLimiter);
 app.route("/v0/verify", verifyRoute);
-app.route("/v0/runtimes", runtimesRoute);
+
+// Authenticated merchant routes
+app.use("/v0/merchants/*", apiKeyAuth);
 app.route("/v0/merchants", merchantsRoute);
+
+// Public self-serve onboarding
+app.route("/v0/onboard", onboardRoute);
+
+// Runtime registration (separate auth — TODO: admin key)
+app.route("/v0/runtimes", runtimesRoute);
+
+// Consent routes (consumer-facing, authenticated via magic link — TODO)
 app.route("/v0/consent", consentRoute);
 
 const port = parseInt(process.env.PORT || "3000");
