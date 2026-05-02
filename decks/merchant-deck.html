@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Attest — Know Your Agent Customers</title>
+<style>
+:root {
+  --indigo: #4F46E5;
+  --indigo-dark: #4338CA;
+  --indigo-light: #EEF2FF;
+  --g900: #111827; --g700: #374151; --g500: #6B7280; --g400: #9CA3AF;
+  --g200: #E5E7EB; --g100: #F3F4F6; --g50: #F9FAFB;
+  --green: #059669; --green-bg: #D1FAE5;
+  --red: #DC2626; --red-bg: #FEE2E2;
+}
+* { margin:0; padding:0; box-sizing:border-box; }
+body { font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-serif; background:#000; overflow:hidden; }
+.slide { position:absolute; inset:0; display:none; padding:60px 80px; flex-direction:column; justify-content:center; }
+.slide.active { display:flex; }
+.slide.light { background:white; color:var(--g900); }
+.slide.dark { background:var(--g900); color:white; }
+.slide.accent { background:var(--indigo); color:white; }
+.slide h1 { font-size:52px; font-weight:800; line-height:1.1; margin-bottom:20px; letter-spacing:-0.03em; }
+.slide h2 { font-size:32px; font-weight:700; line-height:1.2; margin-bottom:16px; }
+.slide h3 { font-size:22px; font-weight:600; margin-bottom:8px; color:var(--indigo); }
+.slide.dark h3, .slide.accent h3 { color:rgba(255,255,255,0.7); }
+.slide p { font-size:20px; line-height:1.6; color:var(--g500); max-width:800px; }
+.slide.dark p, .slide.accent p { color:rgba(255,255,255,0.7); }
+.slide .big { font-size:26px; font-weight:500; line-height:1.5; }
+.slide .muted { color:var(--g400); font-size:16px; }
+.slide.dark .muted { color:rgba(255,255,255,0.4); }
+.logo { width:48px; height:48px; background:var(--indigo); border-radius:12px; display:flex; align-items:center; justify-content:center; margin-bottom:20px; }
+.logo span { color:white; font-weight:800; font-size:22px; }
+.slide.accent .logo { background:rgba(255,255,255,0.2); }
+ul { list-style:none; font-size:20px; line-height:2; }
+li::before { content:"→ "; color:var(--indigo); font-weight:600; }
+.slide.dark li::before, .slide.accent li::before { color:rgba(255,255,255,0.5); }
+.stats { display:grid; grid-template-columns:1fr 1fr; gap:24px; margin-top:24px; }
+.stat { text-align:center; padding:28px; border-radius:12px; background:var(--g50); border:1px solid var(--g200); }
+.slide.dark .stat { background:rgba(255,255,255,0.05); border-color:rgba(255,255,255,0.1); }
+.stat .n { font-size:56px; font-weight:800; color:var(--indigo); display:block; letter-spacing:-0.02em; }
+.slide.dark .stat .n { color:#818CF8; }
+.stat .l { font-size:15px; color:var(--g500); margin-top:4px; display:block; }
+.slide.dark .stat .l { color:rgba(255,255,255,0.5); }
+table { width:100%; border-collapse:collapse; font-size:17px; margin-top:16px; }
+th { text-align:left; padding:10px 14px; border-bottom:2px solid var(--g200); font-weight:600; color:var(--g400); font-size:13px; text-transform:uppercase; letter-spacing:0.05em; }
+td { padding:10px 14px; border-bottom:1px solid var(--g100); }
+.tag { display:inline-block; padding:3px 10px; border-radius:12px; font-size:13px; font-weight:600; }
+.tag-green { background:var(--green-bg); color:var(--green); }
+.tag-red { background:var(--red-bg); color:var(--red); }
+pre { background:var(--g900); color:#E5E7EB; padding:24px; border-radius:12px; font-family:'SF Mono','Fira Code',monospace; font-size:17px; line-height:1.7; margin-top:16px; overflow-x:auto; }
+.slide.dark pre { background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.1); }
+.cols { display:grid; grid-template-columns:1fr 1fr; gap:32px; margin-top:20px; }
+.col { padding:20px; border-radius:12px; }
+.nav { position:fixed; bottom:20px; right:20px; display:flex; gap:6px; z-index:100; }
+.nav button { width:36px; height:36px; border:none; border-radius:8px; background:rgba(128,128,128,0.15); color:var(--g500); font-size:16px; cursor:pointer; }
+.nav button:hover { background:rgba(128,128,128,0.3); }
+.counter { position:fixed; bottom:24px; left:24px; font-size:13px; color:var(--g400); z-index:100; }
+</style>
+</head>
+<body>
+
+<!-- Slide 1: Title -->
+<div class="slide active accent" id="s1">
+  <div class="logo"><span>A</span></div>
+  <h1>Know Your<br>Agent Customers</h1>
+  <p class="big" style="color:rgba(255,255,255,0.85)">Your store is getting new customers. They're not human.<br>They spend more, convert better, and buy faster.</p>
+  <p style="margin-top:32px; color:rgba(255,255,255,0.5); font-size:16px">Merchant Deck &middot; May 2026</p>
+</div>
+
+<!-- Slide 2: Problem -->
+<div class="slide light" id="s2">
+  <h3>The blind spot</h3>
+  <h1>AI Agents Are Already Shopping on Your Site</h1>
+  <ul style="margin-top:16px">
+    <li>They browse your catalog</li>
+    <li>They add items to cart</li>
+    <li>They complete checkout</li>
+  </ul>
+  <p style="margin-top:24px; font-size:22px; color:var(--g700)">And you have <strong>zero visibility</strong> into who they are, who sent them, or who they're buying for.</p>
+  <p style="margin-top:12px">Your analytics call them "bot traffic." Your fraud system flags them. Your CAPTCHAs block them.<br><strong>You're fighting your best new customers.</strong></p>
+</div>
+
+<!-- Slide 3: Stakes -->
+<div class="slide dark" id="s3">
+  <h3>The numbers</h3>
+  <h1>This Is Happening Now</h1>
+  <div class="stats">
+    <div class="stat"><span class="n">4,700%</span><span class="l">AI traffic surge to retail (YoY)</span></div>
+    <div class="stat"><span class="n">11x</span><span class="l">Agent-initiated orders on Shopify</span></div>
+    <div class="stat"><span class="n">42%</span><span class="l">Higher conversion rate from agents</span></div>
+    <div class="stat"><span class="n">37%</span><span class="l">More revenue per visit</span></div>
+  </div>
+  <p class="muted" style="margin-top:20px">Sources: Visa, Shopify, Salesforce Commerce Cloud</p>
+</div>
+
+<!-- Slide 4: Gap -->
+<div class="slide light" id="s4">
+  <h3>The gap</h3>
+  <h1>Payments Are Solved.<br>Identity Is Not.</h1>
+  <ul style="margin-top:16px">
+    <li><strong>Stripe ACP</strong> — agents can discover and pay</li>
+    <li><strong>Visa TAP</strong> — agents can authenticate to the network</li>
+    <li><strong>Mastercard Agent Pay</strong> — agents can use payment credentials</li>
+  </ul>
+  <p style="margin-top:24px; font-size:24px; color:var(--g900); font-weight:600">None of them answer: who is this agent, who do they represent, and is this a returning customer?</p>
+</div>
+
+<!-- Slide 5: How it works -->
+<div class="slide accent" id="s5">
+  <h1>How Attest Works</h1>
+  <div class="cols" style="margin-top:16px">
+    <div class="col" style="background:rgba(255,255,255,0.1); border-radius:12px">
+      <h3 style="color:white">Your side</h3>
+      <p style="font-size:18px">Install the SDK. It detects agent traffic and issues identity challenges automatically.</p>
+    </div>
+    <div class="col" style="background:rgba(255,255,255,0.1); border-radius:12px">
+      <h3 style="color:white">Agent side</h3>
+      <p style="font-size:18px">Agents respond with cryptographic tokens proving who built them and who they act for.</p>
+    </div>
+  </div>
+  <p style="margin-top:28px; font-size:22px; color:rgba(255,255,255,0.9); font-weight:500">Verified agents get loyalty pricing, real-time inventory, no CAPTCHAs.<br>Agents <em>want</em> to identify themselves. You just need to ask.</p>
+</div>
+
+<!-- Slide 6: Three layers -->
+<div class="slide light" id="s6">
+  <h3>Three layers of value</h3>
+  <h1>Detect. Challenge. Verify.</h1>
+  <table style="margin-top:24px">
+    <tr><th>Layer</th><th>Requires agent cooperation</th><th>What you learn</th></tr>
+    <tr><td><strong>Detect</strong></td><td>No</td><td>"34% of your traffic is agents"</td></tr>
+    <tr><td><strong>Challenge</strong></td><td>No (you send, they can ignore)</td><td>"We're offering loyalty pricing to agents that identify themselves"</td></tr>
+    <tr><td><strong>Verify</strong></td><td>Yes (agent responds with signed JWT)</td><td>"This is Alice's Claude agent, she's your VIP customer, authorized up to $500"</td></tr>
+  </table>
+  <p style="margin-top:20px"><strong>Day one:</strong> detection and analytics. <strong>Week one:</strong> full identity resolution.</p>
+</div>
+
+<!-- Slide 7: Dashboard -->
+<div class="slide dark" id="s7">
+  <h3>Your command center</h3>
+  <h1>Full Visibility. No Guessing.</h1>
+  <div class="cols" style="margin-top:16px">
+    <div>
+      <ul>
+        <li>Agent traffic volume and trend</li>
+        <li>Breakdown by runtime (Claude, GPT, custom)</li>
+        <li>Verification rate over time</li>
+        <li>Revenue attribution to agent sessions</li>
+      </ul>
+    </div>
+    <div>
+      <ul>
+        <li>Per-agent and per-runtime policies</li>
+        <li>Customer matching and loyalty tier</li>
+        <li>Consent ledger for compliance</li>
+        <li>One-click CSV customer import</li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+<!-- Slide 8: Integration -->
+<div class="slide light" id="s8">
+  <h3>Integration</h3>
+  <h1>Three Lines of Code</h1>
+  <pre>import { attest } from "@attest/sdk/express";
+
+app.use(attest({
+  apiKey: "att_live_...",
+  merchantId: "your-store.com",
+}));</pre>
+  <p style="margin-top:24px">Also available as a <strong>Shopify App</strong> (one-click install) and <strong>Stripe App</strong> (connects to your dashboard).</p>
+  <p style="margin-top:8px; color:var(--g400); font-size:16px">First agent detected in under 5 minutes.</p>
+</div>
+
+<!-- Slide 9: Verified vs unverified -->
+<div class="slide light" id="s9">
+  <h3>The incentive</h3>
+  <h1>Verified Agents Get the VIP Treatment</h1>
+  <table style="margin-top:16px">
+    <tr><th></th><th>Unverified <span class="tag tag-red">detected</span></th><th>Verified <span class="tag tag-green">attested</span></th></tr>
+    <tr><td><strong>Pricing</strong></td><td>Standard catalog prices</td><td>Loyalty & tier pricing</td></tr>
+    <tr><td><strong>Inventory</strong></td><td>15-min cached data</td><td>Real-time stock levels</td></tr>
+    <tr><td><strong>Checkout</strong></td><td>CAPTCHAs, step-up auth</td><td>Express fast-path</td></tr>
+    <tr><td><strong>Rate limits</strong></td><td>60 req/min</td><td>600 req/min</td></tr>
+    <tr><td><strong>Catalog</strong></td><td>Public listings</td><td>Full catalog + bundles</td></tr>
+  </table>
+  <p style="margin-top:16px">Identity becomes a <strong>feature</strong>, not a wall.</p>
+</div>
+
+<!-- Slide 10: Pricing -->
+<div class="slide dark" id="s10">
+  <h3>Pricing</h3>
+  <h1>Start Free. Scale When Ready.</h1>
+  <div class="stats">
+    <div class="stat"><span class="n">Free</span><span class="l">1,000 sessions/mo &middot; Detection + dashboard</span></div>
+    <div class="stat"><span class="n">$99</span><span class="l">25K sessions/mo &middot; Full challenge-response</span></div>
+    <div class="stat"><span class="n">$499</span><span class="l">250K sessions/mo &middot; Advanced analytics + SLA</span></div>
+    <div class="stat"><span class="n">Custom</span><span class="l">Unlimited &middot; Enterprise + on-prem</span></div>
+  </div>
+  <p class="muted" style="margin-top:16px">Every plan includes detection. Free tier is permanent.</p>
+</div>
+
+<!-- Slide 11: CTA -->
+<div class="slide accent" id="s11">
+  <div class="logo"><span>A</span></div>
+  <h1>See Your Agent Traffic<br>in 5 Minutes</h1>
+  <ul style="margin-top:16px; font-size:22px">
+    <li>Install the SDK or Shopify app</li>
+    <li>Watch your dashboard populate with real agent data</li>
+    <li>Set your first policy</li>
+  </ul>
+  <pre style="margin-top:28px; background:rgba(0,0,0,0.3); border:none; font-size:20px">npm install @attest/sdk</pre>
+  <p style="margin-top:24px; color:rgba(255,255,255,0.5); font-size:16px">dashboard.attest.dev &middot; hello@attest.dev</p>
+</div>
+
+<div class="nav">
+  <button onclick="prev()">&#8592;</button>
+  <button onclick="next()">&#8594;</button>
+</div>
+<div class="counter" id="counter">1 / 11</div>
+
+<script>
+let current = 0;
+const slides = document.querySelectorAll('.slide');
+const total = slides.length;
+function show(n) {
+  slides.forEach(s => s.classList.remove('active'));
+  current = ((n % total) + total) % total;
+  slides[current].classList.add('active');
+  document.getElementById('counter').textContent = `${current + 1} / ${total}`;
+}
+function next() { show(current + 1); }
+function prev() { show(current - 1); }
+document.addEventListener('keydown', e => {
+  if (e.key === 'ArrowRight' || e.key === ' ') { e.preventDefault(); next(); }
+  if (e.key === 'ArrowLeft') { e.preventDefault(); prev(); }
+});
+</script>
+</body>
+</html>
