@@ -4,8 +4,8 @@ import type { AttestationOptions, AttestationToken } from "./types.js";
 export interface AttestClientOptions {
   /** Runtime issuer identifier (e.g., "anthropic", "my-app.example.com") */
   issuer: string;
-  /** ES256 private key for signing attestations (JWK, PEM, or KeyLike) */
-  privateKey: jose.KeyLike | Uint8Array;
+  /** ES256 private key for signing attestations */
+  privateKey: CryptoKey | Uint8Array;
   /** Key ID for the signing key */
   kid?: string;
 }
@@ -15,7 +15,7 @@ const DEFAULT_TTL = 300;
 
 export class AttestClient {
   private issuer: string;
-  private privateKey: jose.KeyLike | Uint8Array;
+  private privateKey: CryptoKey | Uint8Array;
   private kid?: string;
 
   constructor(options: AttestClientOptions) {

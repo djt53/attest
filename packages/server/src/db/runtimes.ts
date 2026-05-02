@@ -50,5 +50,5 @@ export async function listRuntimes(): Promise<Runtime[]> {
     WHERE status = 'active'
     ORDER BY created_at DESC
   `;
-  return rows as Runtime[];
+  return rows as unknown as Runtime[];
 }

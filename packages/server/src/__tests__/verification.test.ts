@@ -6,7 +6,7 @@ import { injectJWKS, clearCache, registerRuntime } from "../services/jwks.js";
 const TEST_ISSUER = "test-runtime";
 const TEST_MERCHANT = "cool-store.myshopify.com";
 
-let privateKey: jose.KeyLike;
+let privateKey: CryptoKey;
 let publicJwk: jose.JWK;
 
 beforeAll(async () => {

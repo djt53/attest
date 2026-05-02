@@ -25,17 +25,17 @@ const server = new McpServer({
   version: "0.1.0",
 });
 
-let privateKey: jose.KeyLike | null = null;
+let privateKey: CryptoKey | null = null;
 let kid: string | undefined;
 const issuer = process.env.ATTEST_ISSUER || "anthropic";
 
-async function ensureKey(): Promise<jose.KeyLike> {
+async function ensureKey(): Promise<CryptoKey> {
   if (privateKey) return privateKey;
 
   // Try loading from env
   if (process.env.ATTEST_PRIVATE_KEY) {
     const jwk = JSON.parse(process.env.ATTEST_PRIVATE_KEY);
-    privateKey = (await jose.importJWK(jwk, "ES256")) as jose.KeyLike;
+    privateKey = (await jose.importJWK(jwk, "ES256")) as CryptoKey;
     kid = process.env.ATTEST_KID || jwk.kid;
     return privateKey;
   }
@@ -46,7 +46,7 @@ async function ensureKey(): Promise<jose.KeyLike> {
     const data = JSON.parse(
       await fs.readFile(process.env.ATTEST_KEY_FILE, "utf-8")
     );
-    privateKey = (await jose.importJWK(data.privateKey, "ES256")) as jose.KeyLike;
+    privateKey = (await jose.importJWK(data.privateKey, "ES256")) as CryptoKey;
     kid = data.privateKey.kid || process.env.ATTEST_KID;
     return privateKey;
   }

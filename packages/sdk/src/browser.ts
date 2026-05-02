@@ -105,7 +105,8 @@ export class AttestDetector {
       return originalSetHeader.call(this, name, value);
     };
 
-    XMLHttpRequest.prototype.open = function (...args: any[]) {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    (XMLHttpRequest.prototype as any).open = function (this: XMLHttpRequest, ...args: any[]) {
       this.addEventListener("loadstart", () => {
         const headers = headerMap.get(this);
         const attestation = headers?.get("agent-attestation");
@@ -113,7 +114,7 @@ export class AttestDetector {
           self.handleAttestation(attestation).catch(self.options.onError || console.error);
         }
       });
-      return originalOpen.apply(this, args);
+      return originalOpen.apply(this, args as any);
     };
   }
 

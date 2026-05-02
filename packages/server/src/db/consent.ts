@@ -73,7 +73,7 @@ export async function findConsentEventsByHuman(
     ORDER BY ce.created_at DESC
     LIMIT ${limit}
   `;
-  return rows as ConsentEvent[];
+  return rows as unknown as ConsentEvent[];
 }
 
 export async function findConsentEventsByMerchant(
@@ -87,7 +87,7 @@ export async function findConsentEventsByMerchant(
     ORDER BY created_at DESC
     LIMIT ${limit}
   `;
-  return rows as ConsentEvent[];
+  return rows as unknown as ConsentEvent[];
 }
 
 export async function createConsentGrant(data: {
@@ -137,5 +137,5 @@ export async function findActiveGrantsForHuman(
       AND (cg.expires_at IS NULL OR cg.expires_at > now())
     ORDER BY cg.created_at DESC
   `;
-  return rows as ConsentGrant[];
+  return rows as unknown as ConsentGrant[];
 }

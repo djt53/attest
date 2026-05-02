@@ -28,7 +28,7 @@ export async function findPoliciesForMerchant(
       AND (agent_id IS NULL OR agent_id = ${agentId ?? null})
     ORDER BY priority DESC, created_at ASC
   `;
-  return rows as MerchantPolicy[];
+  return rows as unknown as MerchantPolicy[];
 }
 
 export async function evaluatePolicy(

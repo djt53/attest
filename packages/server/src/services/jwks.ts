@@ -59,14 +59,12 @@ export async function fetchJWKS(
 export async function getVerificationKey(
   issuer: string,
   kid?: string
-): Promise<jose.KeyLike | Uint8Array | null> {
+): Promise<CryptoKey | Uint8Array | null> {
   const jwks = await fetchJWKS(issuer);
   if (!jwks) return null;
 
   const keyStore = jose.createLocalJWKSet(jwks);
-  // createLocalJWKSet returns a function that resolves the key
-  // We'll use it directly in jwtVerify via the JWKS resolver
-  return keyStore as unknown as jose.KeyLike;
+  return keyStore as unknown as CryptoKey;
 }
 
 // For testing: inject keys directly without fetching
