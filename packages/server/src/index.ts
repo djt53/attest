@@ -11,6 +11,8 @@ import { authRoute } from "./routes/auth.js";
 import { analyticsRoute } from "./routes/analytics.js";
 import { stripeRoute } from "./routes/stripe.js";
 import { stripeCustomersRoute } from "./routes/stripe-customers.js";
+import { detectRoute } from "./routes/detect.js";
+import { discoveryRoute } from "./routes/discovery.js";
 import { apiKeyAuth } from "./middleware/api-key.js";
 import { rateLimit } from "./middleware/rate-limit.js";
 
@@ -21,6 +23,8 @@ app.use("*", cors());
 
 // Public routes
 app.route("/health", healthRoute);
+app.route("/v0/detect", detectRoute);
+app.route("/.well-known/attest.json", discoveryRoute);
 
 // Rate-limited verification endpoint
 const verifyLimiter = rateLimit({

@@ -12,5 +12,5 @@
     "forceConsistentCasingInFileNames": true
   },
   "include": ["src"],
-  "exclude": ["src/demo.ts"]
+  "exclude": ["src/demo.ts", "src/__tests__"]
 }
