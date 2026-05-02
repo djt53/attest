@@ -7,6 +7,7 @@ import {
   invalidateSession,
   getMagicLinkUrl,
 } from "../services/magic-link.js";
+import { sendMagicLinkEmail } from "../services/email.js";
 
 export const authRoute = new Hono();
 
@@ -37,9 +38,8 @@ authRoute.post("/magic-link", async (c) => {
     process.env.CONSENT_PORTAL_URL || "http://localhost:3001"
   );
 
-  // TODO: Send email via SendGrid/Resend/SES
-  // For now, return the link (dev mode)
-  console.log(`Magic link for ${parsed.data.email}: ${magicLink}`);
+  // Send the magic link email
+  await sendMagicLinkEmail(parsed.data.email, magicLink);
 
   return c.json({
     sent: true,
