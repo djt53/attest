@@ -16,6 +16,6 @@ services:
 
 databases:
   - name: attest-db
-    plan: starter
+    plan: basic-256mb
     databaseName: attest
     postgresMajorVersion: "16"
