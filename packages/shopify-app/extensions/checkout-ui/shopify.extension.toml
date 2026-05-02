@@ -1,0 +1,10 @@
+api_version = "2024-10"
+
+[[extensions]]
+name = "Attest Agent Verification"
+handle = "attest-agent-verification"
+type = "ui_extension"
+
+  [[extensions.targeting]]
+  module = "./src/Checkout.tsx"
+  target = "purchase.checkout.block.render"
