@@ -1,0 +1,329 @@
+openapi: 3.1.0
+info:
+  title: Attest API
+  description: Identity resolution and trust layer for agent commerce
+  version: 0.1.0
+  contact:
+    name: Attest
+    url: https://github.com/djt53/attest
+
+servers:
+  - url: https://api.attest.dev
+    description: Production
+  - url: http://localhost:3000
+    description: Local development
+
+security:
+  - apiKey: []
+
+paths:
+  /health:
+    get:
+      summary: Health check
+      security: []
+      responses:
+        "200":
+          description: Service is healthy
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: ok
+                  version:
+                    type: string
+                    example: 0.1.0
+
+  /v0/verify:
+    post:
+      summary: Verify an agent attestation token
+      description: |
+        Full verification pipeline: validates the JWT signature, resolves the
+        human identity against the merchant's customer database, evaluates
+        merchant policies, and logs a consent event.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [token, merchant_id]
+              properties:
+                token:
+                  type: string
+                  description: The Agent-Attestation JWT
+                merchant_id:
+                  type: string
+                  description: Merchant identifier (domain or ID)
+                  example: cool-store.myshopify.com
+      responses:
+        "200":
+          description: Attestation is valid
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/VerificationResult"
+        "401":
+          description: Attestation is invalid
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/VerificationResult"
+        "400":
+          description: Bad request
+    get:
+      summary: Verify from attestation header
+      description: Convenience endpoint for SDK/middleware use
+      parameters:
+        - name: Agent-Attestation
+          in: header
+          required: true
+          schema:
+            type: string
+        - name: merchant_id
+          in: query
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Attestation is valid
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/VerificationResult"
+
+  /v0/runtimes:
+    post:
+      summary: Register an agent runtime
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [issuer, jwks_url, name, contact_email]
+              properties:
+                issuer:
+                  type: string
+                  example: my-agent-runtime
+                jwks_url:
+                  type: string
+                  format: uri
+                  example: https://my-runtime.com/.well-known/attest-jwks.json
+                name:
+                  type: string
+                  example: My Agent Runtime
+                contact_email:
+                  type: string
+                  format: email
+      responses:
+        "201":
+          description: Runtime registered
+
+  /v0/merchants:
+    post:
+      summary: Register a merchant
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateMerchant"
+      responses:
+        "201":
+          description: Merchant created
+
+  /v0/merchants/{externalId}:
+    get:
+      summary: Get merchant details
+      parameters:
+        - name: externalId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Merchant details
+        "404":
+          description: Merchant not found
+
+  /v0/merchants/{externalId}/policies:
+    get:
+      summary: List merchant policies
+      parameters:
+        - name: externalId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: List of policies
+    post:
+      summary: Create a merchant policy
+      parameters:
+        - name: externalId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreatePolicy"
+      responses:
+        "201":
+          description: Policy created
+
+  /v0/merchants/{externalId}/events:
+    get:
+      summary: List consent events for a merchant
+      parameters:
+        - name: externalId
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 50
+      responses:
+        "200":
+          description: List of consent events
+
+  /v0/consent/{humanId}/grants:
+    get:
+      summary: List active consent grants for a human
+      parameters:
+        - name: humanId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: List of active grants
+
+  /v0/consent/{humanId}/events:
+    get:
+      summary: List consent events for a human
+      parameters:
+        - name: humanId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: List of consent events
+
+  /v0/consent/grants/{grantId}/revoke:
+    post:
+      summary: Revoke a consent grant
+      parameters:
+        - name: grantId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Grant revoked
+
+components:
+  securitySchemes:
+    apiKey:
+      type: http
+      scheme: bearer
+      description: API key (att_live_...)
+
+  schemas:
+    VerificationResult:
+      type: object
+      properties:
+        valid:
+          type: boolean
+        error:
+          type: string
+        attestation:
+          type: object
+          properties:
+            runtime:
+              type: string
+            agent:
+              type: string
+            human:
+              type: object
+              properties:
+                id:
+                  type: string
+                email:
+                  type: string
+            scope:
+              type: array
+              items:
+                type: string
+            expires_at:
+              type: string
+              format: date-time
+        resolution:
+          type: object
+          properties:
+            matched:
+              type: boolean
+            customer_id:
+              type: string
+            external_customer_id:
+              type: string
+            customer_name:
+              type: string
+            customer_tier:
+              type: string
+            match_method:
+              type: string
+        policy_action:
+          type: string
+          enum: [allow, deny, step_up, review]
+        consent_id:
+          type: string
+
+    CreateMerchant:
+      type: object
+      required: [external_id, name]
+      properties:
+        external_id:
+          type: string
+        name:
+          type: string
+        platform:
+          type: string
+          enum: [shopify, stripe, custom]
+        platform_shop_id:
+          type: string
+        webhook_url:
+          type: string
+          format: uri
+
+    CreatePolicy:
+      type: object
+      required: [action]
+      properties:
+        runtime_issuer:
+          type: string
+        agent_id:
+          type: string
+        action:
+          type: string
+          enum: [allow, deny, step_up, review]
+        conditions:
+          type: object
+        priority:
+          type: integer
