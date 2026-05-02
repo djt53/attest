@@ -135,23 +135,47 @@ td { padding:10px 14px; border-bottom:1px solid var(--g100); }
   <p style="margin-top:20px">Free tier (detection) is the wedge. Paid tiers unlock verification + resolution + policies.</p>
 </div>
 
-<!-- 7: Positioning -->
+<!-- 7: Competitive landscape -->
 <div class="slide dark" id="s7">
-  <h3>Positioning</h3>
-  <h1>Plaid for Agent Identity</h1>
-  <table>
-    <tr><th>Layer</th><th>Players</th><th>Role</th></tr>
-    <tr><td>Agent protocols</td><td>MCP, A2A</td><td>How agents communicate</td></tr>
-    <tr><td>Payments</td><td>Stripe ACP, MC Agent Pay</td><td>How agents pay</td></tr>
-    <tr><td>Bot management</td><td>Visa TAP, Cloudflare</td><td>Block bad bots</td></tr>
-    <tr><td>Auth providers</td><td>Auth0, Clerk, Okta</td><td>Within-platform auth</td></tr>
-    <tr><td><strong>Identity resolution</strong></td><td><strong>Attest</strong></td><td><strong>Verify agent identity at the merchant</strong></td></tr>
+  <h3>Competitive landscape</h3>
+  <h1>Nobody Else Does This</h1>
+  <table style="font-size:15px">
+    <tr><th>Player</th><th>Model</th><th>What they solve</th><th>What they don't</th></tr>
+    <tr><td><strong>Visa TAP</strong></td><td>Agent pre-registers, signs HTTP requests</td><td>"This agent is in our registry"</td><td>Customer matching. Challenge-response.</td></tr>
+    <tr><td><strong>Clerk AgentPass</strong></td><td>Three-party delegation via Authority</td><td>"Agent is authorized by user"</td><td>Customer matching. Requires intermediary.</td></tr>
+    <tr><td><strong>World AgentKit</strong></td><td>Zero-knowledge proof of humanness</td><td>"A real human is behind this"</td><td>Agent identity. Commerce features.</td></tr>
+    <tr><td><strong>DataDome</strong></td><td>Enterprise bot management ($10K+/yr)</td><td>Trust scoring, bot blocking</td><td>Commerce features. SMB pricing.</td></tr>
+    <tr><td><strong>Prove</strong></td><td>Pre-issued signed credentials</td><td>Identity + intent binding</td><td>Merchant-initiated. No app store.</td></tr>
   </table>
-  <p style="margin-top:16px">Not a protocol, payment rail, or bot detector. The neutral trust layer between agent runtimes and merchant storefronts.</p>
+  <p style="margin-top:16px">Every competitor uses a <strong>push model</strong> — agent must be pre-enrolled.<br>Attest is the only <strong>pull model</strong> — merchant challenges, agent responds.</p>
 </div>
 
-<!-- 8: Business model -->
+<!-- 8: Why we win -->
 <div class="slide light" id="s8">
+  <h3>Defensibility</h3>
+  <h1>Why We Win</h1>
+  <div class="cols">
+    <div class="col-box">
+      <h3>No cold start</h3>
+      <p style="font-size:16px">Detection works day one without agent cooperation. Every competitor requires both sides to adopt before delivering value.</p>
+    </div>
+    <div class="col-box">
+      <h3>Customer matching</h3>
+      <p style="font-size:16px">Only solution that resolves agent sessions to existing merchant customer records. Nobody else links agent traffic to loyalty tiers and purchase history.</p>
+    </div>
+    <div class="col-box">
+      <h3>Marketplace distribution</h3>
+      <p style="font-size:16px">Shopify App Store: 0 competitors for agent identity. Stripe Apps: 0 apps in the entire agent category. We're first to both.</p>
+    </div>
+    <div class="col-box">
+      <h3>Protocol-compatible</h3>
+      <p style="font-size:16px">Already accepts AgentPass credentials and Visa TAP signatures. We're the resolution layer on top, not competing with the protocols.</p>
+    </div>
+  </div>
+</div>
+
+<!-- 9: Business model -->
+<div class="slide dark" id="s9">
   <h3>Business model</h3>
   <h1>Per-Session Pricing</h1>
   <div class="stats two">
@@ -166,8 +190,8 @@ td { padding:10px 14px; border-bottom:1px solid var(--g100); }
   </ul>
 </div>
 
-<!-- 9: GTM -->
-<div class="slide dark" id="s9">
+<!-- 10: GTM -->
+<div class="slide light" id="s10">
   <h3>Go-to-market</h3>
   <h1>Two Distribution Channels</h1>
   <div class="cols">
@@ -183,26 +207,27 @@ td { padding:10px 14px; border-bottom:1px solid var(--g100); }
   <p style="margin-top:24px">Merchant-first wedge. Distribution is built-in. Adoption is pull, not push.</p>
 </div>
 
-<!-- 10: Traction -->
-<div class="slide light" id="s10">
+<!-- 11: Traction -->
+<div class="slide dark" id="s11">
   <h3>Current state</h3>
   <h1>The Product Works</h1>
   <div class="stats">
-    <div class="stat"><span class="n">8K+</span><span class="l">Lines of TypeScript</span></div>
-    <div class="stat"><span class="n">78</span><span class="l">Tests passing</span></div>
-    <div class="stat"><span class="n">8</span><span class="l">Packages in monorepo</span></div>
+    <div class="stat"><span class="n">10K+</span><span class="l">Lines of TypeScript</span></div>
+    <div class="stat"><span class="n">88</span><span class="l">Tests passing</span></div>
+    <div class="stat"><span class="n">9</span><span class="l">Packages in monorepo</span></div>
   </div>
   <ul style="margin-top:24px">
-    <li>Complete verification pipeline: detect → challenge → verify → resolve → consent</li>
-    <li>Both Shopify and Stripe integrations built and functional</li>
-    <li>Standalone merchant dashboard with analytics, policies, customer import</li>
-    <li>SDK with adapters for Claude (MCP), OpenAI, Stripe, generic JWT</li>
+    <li>Full pipeline: detect → challenge → verify → resolve → consent → analytics</li>
+    <li>Shopify app + Stripe app + standalone dashboard — all built</li>
+    <li>AgentPass compatible + holder-binding security + runtime trust tiers</li>
+    <li>SDK with adapters for Claude (MCP), OpenAI, Stripe, AgentPass, generic JWT</li>
+    <li>Merchant sales deck + VC pitch deck + competitive analysis complete</li>
   </ul>
   <p style="margin-top:12px; font-weight:600">This is not a deck and a dream.</p>
 </div>
 
-<!-- 11: Ask -->
-<div class="slide accent" id="s11">
+<!-- 12: Ask -->
+<div class="slide accent" id="s12">
   <div class="logo"><span>A</span></div>
   <h1>$2-4M Seed</h1>
   <h2 style="color:rgba(255,255,255,0.8); font-weight:500">$12-18M post-money</h2>
@@ -228,7 +253,7 @@ td { padding:10px 14px; border-bottom:1px solid var(--g100); }
   <button onclick="prev()">&#8592;</button>
   <button onclick="next()">&#8594;</button>
 </div>
-<div class="counter" id="counter">1 / 11</div>
+<div class="counter" id="counter">1 / 12</div>
 
 <script>
 let current = 0;
