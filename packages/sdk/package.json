@@ -22,6 +22,10 @@
       "import": "./dist/middleware.js",
       "types": "./dist/middleware.d.ts"
     },
+    "./express": {
+      "import": "./dist/express.js",
+      "types": "./dist/express.d.ts"
+    },
     "./challenge": {
       "import": "./dist/challenge.js",
       "types": "./dist/challenge.d.ts"
