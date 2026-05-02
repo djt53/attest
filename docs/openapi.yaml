@@ -238,6 +238,88 @@ paths:
         "200":
           description: Grant revoked
 
+  /v0/stripe/connect:
+    get:
+      summary: Initiate Stripe Connect OAuth
+      security: []
+      responses:
+        "302":
+          description: Redirect to Stripe Connect authorization
+
+  /v0/stripe/callback:
+    get:
+      summary: Handle Stripe Connect OAuth callback
+      security: []
+      parameters:
+        - name: code
+          in: query
+          required: true
+          schema:
+            type: string
+        - name: state
+          in: query
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Connected successfully
+
+  /v0/stripe/webhooks:
+    post:
+      summary: Handle Stripe webhook events
+      security: []
+      description: |
+        Processes checkout.session.completed and payment_intent.created events.
+        Detects agent attestation tokens in metadata, verifies them, and
+        decorates the Stripe objects with verification results.
+      responses:
+        "200":
+          description: Event processed
+
+  /v0/stripe/verify:
+    post:
+      summary: Verify attestation and decorate Stripe objects
+      description: |
+        Combined endpoint: verifies an attestation token and optionally
+        decorates a Stripe Checkout Session or PaymentIntent with the results.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [token, merchant_id]
+              properties:
+                token:
+                  type: string
+                merchant_id:
+                  type: string
+                checkout_session_id:
+                  type: string
+                payment_intent_id:
+                  type: string
+      responses:
+        "200":
+          description: Verification result with Stripe decoration status
+
+  /v0/stripe/sync-customers:
+    post:
+      summary: Import customers from Stripe
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [merchant_id]
+              properties:
+                merchant_id:
+                  type: string
+      responses:
+        "200":
+          description: Sync results (synced, failed, total counts)
+
 components:
   securitySchemes:
     apiKey:

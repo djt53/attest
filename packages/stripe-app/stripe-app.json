@@ -1,0 +1,52 @@
+{
+  "id": "com.attest.stripe-app",
+  "version": "0.1.0",
+  "name": "Attest — Agent Identity",
+  "icon": "",
+  "permissions": [
+    {
+      "permission": "customer_read",
+      "purpose": "Read customer data to resolve agent attestations to existing customers"
+    },
+    {
+      "permission": "payment_intent_read",
+      "purpose": "Read payment intent metadata to detect agent attestation tokens"
+    },
+    {
+      "permission": "payment_intent_write",
+      "purpose": "Write attestation verification results to payment intent metadata"
+    },
+    {
+      "permission": "checkout_session_read",
+      "purpose": "Read checkout session metadata to detect agent attestation tokens"
+    },
+    {
+      "permission": "checkout_session_write",
+      "purpose": "Write attestation verification results to checkout session metadata"
+    }
+  ],
+  "app_backend": {
+    "url": "https://api.attest.dev"
+  },
+  "ui_extension": {
+    "views": [
+      {
+        "viewport": "stripe.dashboard.payment.detail",
+        "component": "PaymentDetailView"
+      },
+      {
+        "viewport": "stripe.dashboard.home.overview",
+        "component": "OverviewView"
+      }
+    ],
+    "actions": [],
+    "content_security_policy": {
+      "connect-src": ["https://api.attest.dev"],
+      "image-src": []
+    }
+  },
+  "post_install_action": {
+    "type": "external",
+    "url": "https://api.attest.dev/v0/stripe/connect"
+  }
+}

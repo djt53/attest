@@ -10,6 +10,7 @@ import { onboardRoute } from "./routes/onboard.js";
 import { authRoute } from "./routes/auth.js";
 import { analyticsRoute } from "./routes/analytics.js";
 import { stripeRoute } from "./routes/stripe.js";
+import { stripeCustomersRoute } from "./routes/stripe-customers.js";
 import { apiKeyAuth } from "./middleware/api-key.js";
 import { rateLimit } from "./middleware/rate-limit.js";
 
@@ -49,6 +50,7 @@ app.route("/v0/auth", authRoute);
 
 // Stripe integration (webhooks are public, verify/connect use API key)
 app.route("/v0/stripe", stripeRoute);
+app.route("/v0/stripe", stripeCustomersRoute);
 
 // Consent routes (consumer-facing)
 app.route("/v0/consent", consentRoute);
