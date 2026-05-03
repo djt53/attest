@@ -72,7 +72,17 @@ app.route("/v0/merchant-requests", merchantRequestsRoute);
 app.route("/v0/consent", consentRoute);
 
 const port = parseInt(process.env.PORT || "3000");
-console.log(`Attest server listening on :${port}`);
+
+// Use @hono/node-server for Node.js deployments (Render, Railway, etc.)
+// Falls back to Bun-style export for local dev with Bun
+if (typeof globalThis.Bun === "undefined") {
+  const { serve } = await import("@hono/node-server");
+  serve({ fetch: app.fetch, port }, () => {
+    console.log(`Attest server listening on :${port}`);
+  });
+} else {
+  console.log(`Attest server listening on :${port}`);
+}
 
 export default {
   port,
